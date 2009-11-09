@@ -1,5 +1,5 @@
 /**
- * Calendar class, version 0.0.2 by Martin <martin@synbioz.com>
+ * Calendar class, version 0.0.1 by Martin <martin@synbioz.com>
  *
  * Calendar is a class wich provide easy way to choose a date, it's also 
  * called datePicker.
@@ -7,17 +7,14 @@
  * Please use Calendar by calling Calendar.getInstance, not new Calendar.
  * You normaly only need one calendar by page, even if you have multiple 
  * date to choose.
- * 
- * Options allow you to view week number on the first column. You can also 
- * specify callbacks which be called when a day is choosen.
  */
 
 Calendar = Class.create();
 
 /* Statics methods */
-Calendar.getInstance = function(e, options) {
+Calendar.getInstance = function(e) {
 	if(!Calendar.instance)
-		Calendar.instance = new Calendar(e, null, options);
+		Calendar.instance = new Calendar(e);
 		
 	Calendar.instance.setCaller(Event.element(e));		
 	Calendar.instance.position();
@@ -56,14 +53,9 @@ Calendar.prototype = {
 								"31", "28", "31", "30", "31", "30", 
 								"31", "31", "30", "31", "30", "31"
 							 ),
-							
-	_options: $H({ weekNumbers: false }),
-	_template: new Template('#{year}/#{month}/#{day}'),
+	_template: new Template('#{year}/#{month}/#{day}'),							 
 	
-	_callbacks: new Array(),
-	
-	initialize: function(e, date, options) {
-		this.setOptions(options);		
+	initialize: function(e, date) {
 		this.setDate(date || new Date());
 		this.setCalendar($('calendar') || this.buildCalendar());		
 	},
@@ -83,16 +75,11 @@ Calendar.prototype = {
 	
 	getDateAsStr: function(day, month, year) {
 		return this.getTemplate().evaluate({
-			day: 		this.strNumber(day),
-			month:	this.strNumber(month),
-			year: 	year
+			day: day < 10 ? ("0" + day) : day, 
+			month: month < 10 ? ("0" + month) : month, 
+			year: year
 		});
 	}, // getDateAsStr
-	
-	strNumber: function(number) {
-		if(isNaN(number)) return "";			
-		return number < 10 ? "0" + number : number
-	}, // strNumber
 	
 	getDaysNames: function() {
 		return this._daysNames;
@@ -142,14 +129,6 @@ Calendar.prototype = {
 		return this._monthsLengths;
 	}, // getMonthsLength
 	
-	getOptions: function() {
-		return this._options;
-	}, // getOptions
-	
-	setOptions: function(options) {
-		this._options.update($H(options));
-	}, // setOptions
-	
 	getTemplate: function() {
 		return this._template;
 	}, // getTemplate	
@@ -158,34 +137,17 @@ Calendar.prototype = {
 		this._template = template;
 	}, // setTemplate
 	
-	getCallbacks: function() {
-		return this._callbacks;
-	}, // getCallbacks
-	
-	setCallbacks: function(callbacks) {
-		this._callbacks = callbacks;
-	}, // setCallbacks
-	
-	addCallback: function(callback) {
-		if("function" == typeof callback) {
-			this.getCallbacks().push(callback);
-			return true;
-		}
-		return false;
-	}, // addCallback
-	
 	append: function() {
 		$$("body").first().insert(this.getCalendar());
 	}, // append
 	
 	buildCalendar: function() {
-		var table						= new Element("table", {"id": "calendar"});		
-		var rowsNumber 			= this.getRowsNumber();
-		var firstDayNumber	= this.getFirstDayNumber();
-		var monthLength 		= this.getMonthLength();
-		var calendar				= this;
-		var default_colspan	= this.getOptions().get("weekNumbers") ? 6 : 5;
-		
+		var table 			= new Element("table", {"id": "calendar"});		
+		var rowsNumber 		= this.getRowsNumber();
+		var firstDayNumber 	= this.getFirstDayNumber();
+		var monthLength 	= this.getMonthLength();
+		var calendar		= this;
+				
 		// header
 		var thead = new Element("tr", {"class": "header"});		
 		// previous
@@ -207,7 +169,7 @@ Calendar.prototype = {
 		});		
 		
 		thead.insert(col);
-		thead.insert(new Element("td", { "colspan": default_colspan }).update(this.getMonthName() + " " + this.getYear()));
+		thead.insert(new Element("td", {"colspan": "5"}).update(this.getMonthName() + " " + this.getYear()));
 
 		// next
 		var col = new Element("td", {"class": "raquo"}).update("&raquo;");
@@ -232,24 +194,14 @@ Calendar.prototype = {
 
 		// days
 		var thead = new Element("tr", {"class": "header"});
-		
-		if(this.getOptions().get("weekNumbers"))
-			thead.insert(new Element("td"));
-			
 		for(var days = 0; days < 7; ++days) {
 			thead.insert(new Element("td").update(this.getDaysNames()[days].substr(0, 1)));
 		}
 		table.insert(thead);
-				
+
 		// first line
 		var tbody = new Element("tr");
 		var index = 0;
-		
-		if(this.getOptions().get("weekNumbers")) {
-			var week = this.getWeeksNumberFromDate(new Date(this.getYear(), this.getMonth(), 1));
-			tbody.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(week)));
-		}
-		
 		for(var colsNumber = 0; colsNumber < 7; ++colsNumber) {
 			var col = new Element("td");
 			if(colsNumber >= firstDayNumber) {
@@ -263,13 +215,9 @@ Calendar.prototype = {
 		}
 		table.insert(tbody);
 		
-		// middle lines		
+		// middle lines
 		for(var index = 0; index < rowsNumber - 2; ++index) {
 			var tbody = new Element("tr");
-			
-			if(this.getOptions().get("weekNumbers"))
-				tbody.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(++week)));
-				
 			for(var colsNumber = 0; colsNumber < 7; ++colsNumber) {
 				var state = (7 - firstDayNumber) + (index * 7) + (colsNumber + 1);
 				var col = new Element("td");
@@ -282,10 +230,6 @@ Calendar.prototype = {
 		
 		// last line
 		var tbody = new Element("tr");
-		
-		if(this.getOptions().get("weekNumbers"))
-			tbody.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(++week)));
-		
 		var startAt = (7 - firstDayNumber) + (rowsNumber - 2) * 7 + 1;
 		for(var colsNumber = 0; colsNumber < 7; ++colsNumber) {
 			var col = new Element("td");
@@ -313,12 +257,6 @@ Calendar.prototype = {
 				calendar.visible() ? calendar.hide() : calendar.show();	
 		}
 	}, // display
-	
-	// Return the position of the day in the year, 1st january is day 1, 1 february is day 32… 
-	getDayNumberOfYear: function(date) {
-		var firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-		return Math.round(((date - firstDayOfYear) / (1000 * 86400))) + 1;
-	},
 		
 	getFirstDayNumber: function() {
 		var date = this.getDate();
@@ -326,7 +264,7 @@ Calendar.prototype = {
 		var index = (this.getWeekDay() + 6) % 7;
 		this.setDate(date);
 		return index;
-	}, // getFirstDayNumber	
+	}, // getFirstDayNumber
 	
 	getMonthName: function() {
 		var index = this.getMonth();
@@ -342,24 +280,12 @@ Calendar.prototype = {
 			return (this.isLeapYear() && 1 == index) ? 29 : this.getMonthsLengths()[index];
 		return 0;
 	}, // getMonthLength
-			
-	/*
-	 * Get the day number of the date (Ex: 1st february is the 32th day of the year), add missing day 
-	 * before the 1st january and missing day after the date to have complete weeks. Then divide by 7, it 
-	 * returns the week number of the day.
-	 */
-	getWeeksNumberFromDate: function(date) {
-		var dayNumber = this.getDayNumberOfYear(date);
-		var firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-		
-		// Ex: year 2009 start a thursday, add 3 days (monday to wednesday)
-		var dayBeforeYearStart = (firstDayOfYear.getDay() + 6) % 7;
-		// Add missing day to complete the week, 1 october 2009 is a thursday, add 3 days (friday to sunday)
-		var dayForWeekToFinish = 6 - ((date.getDay() + 6) % 7);
-		
-		return((dayNumber + dayBeforeYearStart + dayForWeekToFinish) / 7);
-	}, // getWeeksNumberFromDate
 	
+	getPreviousInput: function() {
+		if("INPUT" == this.getCaller().nodeName) return this.getCaller();
+		return this.getCaller().previous("input[type='text']") || this.getCaller().up().down("input[type='text']");
+	}, // getPreviousInput
+
 	getRowsNumber: function() {
 		return(Math.ceil((this.getMonthLength() - (7 - this.getFirstDayNumber())) / 7) + 1);
 	}, // getRowsNumber
@@ -380,17 +306,11 @@ Calendar.prototype = {
 		
 		var object = this;
 		col.observe('click', function(e) {
-			var input = object.getCaller().previous("input[type='text']");
-			var value = object.getDateAsStr(day, object.getMonth() + 1, object.getYear());
+			var input = object.getPreviousInput();
 			if(input) {
-				input.value = value
+				input.value = object.getDateAsStr(day, object.getMonth() + 1, object.getYear());
 				object.display();
 			}
-			
-			object.getCallbacks().each(function(callback) {
-				if ("function" == typeof callback) callback(value, object);
-			});
-			
 		});
 	}, // manageColumn
 	
