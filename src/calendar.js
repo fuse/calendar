@@ -15,8 +15,12 @@
  * will be initialized with this date. You can also use / separator.
  */
 
-Calendar = Class.create();
+// Add some extensions to date class.
+$A(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]).each(function(day, index) {
+  Date.prototype["is_" + day] = function() { return this.getDay() == index + 1 }
+});
 
+Calendar = Class.create();
 /* Statics methods */
 Calendar.getInstance = function(e, options) {
   var node = Event.element(e);
@@ -26,7 +30,7 @@ Calendar.getInstance = function(e, options) {
     date = new Date(RegExp.$1, RegExp.$3 - 1, RegExp.$5)
 
   if(!Calendar.instance)
-    Calendar.instance = new Calendar(e, date);
+    Calendar.instance = new Calendar(e, date, options);
 
   Calendar.instance.setCaller(node);
   Calendar.instance.setDate(date);
@@ -196,6 +200,8 @@ Calendar.prototype = {
     var monthLength     = this.getMonthLength();
     var calendar        = this;
     var default_colspan = this.getOptions().get("weekNumbers") ? 6 : 5;
+    var weeksNumber     = this.getWeeksNumberOfYear(calendar.getYear());
+    var prevWeeksNumber = this.getWeeksNumberOfYear(calendar.getYear() - 1);
 
     // header
     var thead = new Element("tr", {"class": "header"});
@@ -274,6 +280,9 @@ Calendar.prototype = {
     }
     table.insert(tbody);
 
+    if(week == prevWeeksNumber)
+      week = 0;
+
     // middle lines
     for(var index = 0; index < rowsNumber - 2; ++index) {
       var tbody = new Element("tr");
@@ -293,6 +302,8 @@ Calendar.prototype = {
 
     // last line
     var tbody = new Element("tr");
+    if(week == weeksNumber)
+      week = 0
 
     if(this.getOptions().get("weekNumbers"))
       tbody.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(++week)));
@@ -362,14 +373,38 @@ Calendar.prototype = {
   getWeeksNumberFromDate: function(date) {
     var dayNumber = this.getDayNumberOfYear(date);
     var firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-
     // Ex: year 2009 start a thursday, add 3 days (monday to wednesday)
     var dayBeforeYearStart = (firstDayOfYear.getDay() + 6) % 7;
     // Add missing day to complete the week, 1 october 2009 is a thursday, add 3 days (friday to sunday)
     var dayForWeekToFinish = 6 - ((date.getDay() + 6) % 7);
 
-    return((dayNumber + dayBeforeYearStart + dayForWeekToFinish) / 7);
+    var weekNumber = ((dayNumber + dayBeforeYearStart + dayForWeekToFinish) / 7)
+
+    if(!this.firstDaysContainsThursday(firstDayOfYear))
+      weekNumber--
+
+    return (weekNumber == 0) ?
+      this.getWeeksNumberFromDate(new Date(firstDayOfYear.getFullYear() - 1, 11, 31)) :
+      weekNumber;
   }, // getWeeksNumberFromDate
+
+  /*
+   * Takes the first day of the year as param.
+   */
+  firstDaysContainsThursday: function(date) {
+    return date.getDay() >= 1 && date.getDay() <= 4;
+  }, // firstDaysContainsThursday
+
+  /*
+   * Date which starts a thursday have 53 weeks. Leap year have 53 weeks if they start thursday or wednesday.
+   */
+  getWeeksNumberOfYear: function(year) {
+    var date = new Date(year, 0, 1);
+    if(this.isLeapYear())
+      return (date.is_wednesday() || date.is_thursday()) ? 53 : 52;
+    else
+      return date.is_thursday() ? 53 : 52;
+  }, // getWeeksNumberOfYear
 
   getPreviousInput: function() {
     if("INPUT" == this.getCaller().nodeName) return this.getCaller();
