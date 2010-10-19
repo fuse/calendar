@@ -1,0 +1,47 @@
+html {
+  font-family: "Lucida Grande", Verdana, Tahoma, sans-serif;
+  font-size: 62.5%;
+  line-height: 2em;
+}
+
+body {
+  font-size: 1.1em;
+}
+
+img.calendar, img.cancel {
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+#calendar {
+  background-color: #1379bc;
+  border: 1px solid white;
+  color: white;
+}
+
+#calendar tr {
+  text-align: center;
+}
+
+#calendar tr td {
+  border: 1px solid white;
+  padding: 0.2em 0.5em;
+}
+
+#calendar tr td.valid, #calendar .header .laquo, #calendar .header .raquo {
+  cursor: pointer;
+}
+
+#calendar tr td.valid:hover, #calendar .header .laquo:hover, #calendar .header .raquo:hover {
+  background-color: white;
+  color: #1379bc;
+}
+
+#calendar tr td.week_number {
+  background-color: #a1c7dc;
+  font-weight: bold;
+}
