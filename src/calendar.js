@@ -204,7 +204,8 @@ Calendar.prototype = {
     var prevWeeksNumber = this.getWeeksNumberOfYear(calendar.getYear() - 1);
 
     // header
-    var thead = new Element("tr", {"class": "header"});
+    var thead = new Element("thead");
+    var row = new Element("tr", {"class": "header"});
     // previous
     var col = new Element("td", {"class": "laquo"}).update("&laquo;");
     col.observe('click', function(e) {
@@ -223,8 +224,8 @@ Calendar.prototype = {
       previousCalendar.remove();
     });
 
-    thead.insert(col);
-    thead.insert(new Element("td", { "colspan": default_colspan }).update(this.getMonthName() + " " + this.getYear()));
+    row.insert(col);
+    row.insert(new Element("td", { "colspan": default_colspan }).update(this.getMonthName() + " " + this.getYear()));
 
     // next
     var col = new Element("td", {"class": "raquo"}).update("&raquo;");
@@ -244,27 +245,29 @@ Calendar.prototype = {
       previousCalendar.remove();
     });
 
-    thead.insert(col);
-    table.insert(thead);
+    row.insert(col);
+    thead.insert(row);
 
     // days
-    var thead = new Element("tr", {"class": "header"});
+    var row = new Element("tr", {"class": "header"});
 
     if(this.getOptions().get("weekNumbers"))
-      thead.insert(new Element("td"));
+      row.insert(new Element("td"));
 
     for(var days = 0; days < 7; ++days) {
-      thead.insert(new Element("td").update(this.getDaysNames()[days].substr(0, 1)));
+      row.insert(new Element("td").update(this.getDaysNames()[days].substr(0, 1)));
     }
+    thead.insert(row);
     table.insert(thead);
 
     // first line
-    var tbody = new Element("tr");
+    var tbody = new Element("tbody");
+    var row = new Element("tr");
     var index = 0;
 
     if(this.getOptions().get("weekNumbers")) {
       var week = this.getWeeksNumberFromDate(new Date(this.getYear(), this.getMonth(), 1));
-      tbody.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(week)));
+      row.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(week)));
     }
 
     for(var colsNumber = 0; colsNumber < 7; ++colsNumber) {
@@ -276,37 +279,37 @@ Calendar.prototype = {
       } else
         col.update("X");
 
-      tbody.insert(col);
+      row.insert(col);
     }
-    table.insert(tbody);
+    tbody.insert(row);
 
     if(week == prevWeeksNumber)
       week = 0;
 
     // middle lines
     for(var index = 0; index < rowsNumber - 2; ++index) {
-      var tbody = new Element("tr");
+      var row = new Element("tr");
 
       if(this.getOptions().get("weekNumbers"))
-        tbody.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(++week)));
+        row.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(++week)));
 
       for(var colsNumber = 0; colsNumber < 7; ++colsNumber) {
         var state = (7 - firstDayNumber) + (index * 7) + (colsNumber + 1);
         var col = new Element("td");
         col.addClassName("valid");
-        tbody.insert(col.update(state));
+        row.insert(col.update(state));
         this.manageColumn(col, state);
       }
-      table.insert(tbody);
+      tbody.insert(row);
     }
 
     // last line
-    var tbody = new Element("tr");
+    var row = new Element("tr");
     if(week == weeksNumber)
       week = 0
 
     if(this.getOptions().get("weekNumbers"))
-      tbody.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(++week)));
+      row.insert(new Element("td", { "class": "week_number" }).update(this.strNumber(++week)));
 
     var startAt = (7 - firstDayNumber) + (rowsNumber - 2) * 7 + 1;
     for(var colsNumber = 0; colsNumber < 7; ++colsNumber) {
@@ -318,8 +321,9 @@ Calendar.prototype = {
       } else
         col.update("X");
 
-      tbody.insert(col);
+      row.insert(col);
     }
+    tbody.insert(row)
     table.insert(tbody);
 
     return table;
