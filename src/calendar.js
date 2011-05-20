@@ -451,11 +451,11 @@ Calendar.prototype = {
       col.removeClassName("over");
     });
 
+    var object = this;
     if(new Date(object.getYear(), object.getMonth(), day).getTime() == Date.today_at_midnight().getTime()) {
       col.addClassName("today");
     }
 
-    var object = this;
     col.observe('click', function(e) {
       var input = object.getPreviousInput();
       if(input) {
