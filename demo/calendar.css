@@ -41,7 +41,7 @@ table {
   color: #1379bc;
 }
 
-#calendar tr td.week_number {
+#calendar tr td.week_number, #calendar tr td.today {
   background-color: #a1c7dc;
   font-weight: bold;
 }

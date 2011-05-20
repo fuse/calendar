@@ -1,5 +1,5 @@
 /**
- * Calendar class, version 0.0.3 by Martin <martin@synbioz.com>
+ * Calendar class, version 0.0.4 by Martin Catty <mcatty@synbioz.com>
  *
  * Calendar is a class wich provide easy way to choose a date, it's also
  * called datePicker.
@@ -16,9 +16,27 @@
  */
 
 // Add some extensions to date class.
+Date.today = function() {
+  Date._today = Date._today || new Date();
+  return Date._today;
+}
+
+Date.today_at_midnight = function() {
+  Date._today_at_midnight = Date._today_at_midnight || new Date(Date.today().getFullYear(), Date.today().getMonth(), Date.today().getDate());
+  return Date._today_at_midnight;
+}
+
 $A(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]).each(function(day, index) {
   Date.prototype["is_" + day] = function() { return this.getDay() == index + 1 }
 });
+
+Date.prototype["at_midnight"] = function() {
+  return new Date(this.getFullYear(), this.getMonth(), this.getDate());
+}
+
+Date.prototype["is_today"] = function() {
+  return this.at_midnight().getTime() == Date.today_at_midnight().getTime();
+}
 
 Calendar = Class.create();
 /* Statics methods */
@@ -432,6 +450,10 @@ Calendar.prototype = {
     col.observe('mouseout', function(e) {
       col.removeClassName("over");
     });
+
+    if(new Date(object.getYear(), object.getMonth(), day).getTime() == Date.today_at_midnight().getTime()) {
+      col.addClassName("today");
+    }
 
     var object = this;
     col.observe('click', function(e) {
